@@ -1,0 +1,30 @@
+# Swift Package Manager
+/.build
+/Packages
+/*.xcodeproj
+xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+*.xcworkspace/
+project.xcworkspace/
+xcuserdata/
+*.moved-aside
+
+# App specific
+*.log
+nohup.out 
