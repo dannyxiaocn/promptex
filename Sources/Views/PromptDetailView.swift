@@ -27,7 +27,7 @@ struct PromptDetailView: View {
                         
                         Spacer()
                         
-                        Text("Modified \(prompt.lastModified, style: .relative)")
+                        Text("Modified \(formatRelativeTime(prompt.lastModified))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -177,5 +177,28 @@ struct PromptDetailView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+    }
+    
+    private func formatRelativeTime(_ timestamp: Date) -> String {
+        let timeInterval = Date().timeIntervalSince(timestamp)
+        
+        if timeInterval < 60 {
+            return "< 1 min"
+        } else if timeInterval < 3600 {
+            let minutes = Int(timeInterval / 60)
+            return "\(minutes) min"
+        } else if timeInterval < 86400 {
+            let hours = Int(timeInterval / 3600)
+            return "\(hours) hour\(hours == 1 ? "" : "s")"
+        } else if timeInterval < 2592000 {
+            let days = Int(timeInterval / 86400)
+            return "\(days) day\(days == 1 ? "" : "s")"
+        } else if timeInterval < 31536000 {
+            let months = Int(timeInterval / 2592000)
+            return "\(months) month\(months == 1 ? "" : "s")"
+        } else {
+            let years = Int(timeInterval / 31536000)
+            return "\(years) year\(years == 1 ? "" : "s")"
+        }
     }
 } 
