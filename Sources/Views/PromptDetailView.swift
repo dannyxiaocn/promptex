@@ -4,6 +4,7 @@ struct PromptDetailView: View {
     let prompt: Prompt
     @ObservedObject var promptManager: PromptManager
     @Binding var editingPrompt: Prompt?
+    var onPromptDeleted: (() -> Void)? = nil
     
     @State private var contentText: String = ""
     @State private var updateTimer: Timer?
@@ -73,6 +74,7 @@ struct PromptDetailView: View {
                     
                     Button {
                         promptManager.deletePrompt(prompt)
+                        onPromptDeleted?()
                     } label: {
                         Image(systemName: "trash")
                             .foregroundColor(.red)

@@ -151,7 +151,10 @@ struct PromptExView: View {
                 PromptDetailView(
                     prompt: prompt,
                     promptManager: promptManager,
-                    editingPrompt: $editingPrompt
+                    editingPrompt: $editingPrompt,
+                    onPromptDeleted: {
+                        selectedPrompt = nil
+                    }
                 )
             } else {
                 // Direct Quick Add when no prompt selected
@@ -173,6 +176,13 @@ struct PromptExView: View {
         .onReceive(NotificationCenter.default.publisher(for: .triggerQuickAdd)) { _ in
             // Triggered from menu bar - switch to quick add mode
             selectedPrompt = nil
+        }
+        .onChange(of: promptManager.prompts) { _ in
+            // Clear selection if the selected prompt no longer exists
+            if let selected = selectedPrompt,
+               !promptManager.prompts.contains(where: { $0.id == selected.id }) {
+                selectedPrompt = nil
+            }
         }
         .background(
             // Invisible buttons for keyboard shortcuts
