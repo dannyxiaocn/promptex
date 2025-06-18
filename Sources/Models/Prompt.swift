@@ -21,6 +21,18 @@ struct Prompt: Identifiable, Codable, Hashable {
         self.isFavorite = isFavorite
     }
     
+    // Full initializer for loading from storage
+    init(id: UUID, title: String, content: String, category: PromptCategory, tags: [String], createdAt: Date, lastModified: Date, isFavorite: Bool) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.category = category
+        self.tags = tags
+        self.createdAt = createdAt
+        self.lastModified = lastModified
+        self.isFavorite = isFavorite
+    }
+    
     mutating func updateContent(_ newContent: String) {
         guard newContent != content else { return }
         self.content = newContent

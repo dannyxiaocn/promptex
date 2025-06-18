@@ -47,6 +47,8 @@ struct PromptDetailView: View {
                     
                     Button {
                         editingPrompt = prompt
+                        // Notify of user activity
+                        NotificationCenter.default.post(name: .userActivity, object: nil)
                     } label: {
                         Image(systemName: "pencil")
                     }
@@ -177,6 +179,8 @@ struct PromptDetailView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+        // Notify of user activity
+        NotificationCenter.default.post(name: .userActivity, object: nil)
     }
     
     private func formatRelativeTime(_ timestamp: Date) -> String {

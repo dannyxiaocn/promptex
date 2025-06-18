@@ -6,6 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var floatingWindow: NSWindow?
     var promptManager = PromptManager()
     var statusBarItem: NSStatusItem?
+    private var lastActivityTime: Date = Date()
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Keep app running in background but show in menu bar
@@ -16,6 +17,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Setup global hotkey
         setupGlobalHotkey()
+        
+        // Setup activity tracking
+        setupActivityTracking()
         
         // Create floating window
         createFloatingWindow()
@@ -80,6 +84,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    private func setupActivityTracking() {
+        // Listen for user activity notifications
+        NotificationCenter.default.addObserver(
+            forName: .userActivity,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateLastActivity()
+        }
+    }
+    
     private func createFloatingWindow() {
         let windowSize = NSSize(width: 800, height: 600)
         
@@ -118,12 +133,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if window.isVisible {
             window.orderOut(nil)
         } else {
+            // Check if more than 1 hour has passed since last activity
+            let timeSinceLastActivity = Date().timeIntervalSince(lastActivityTime)
+            let oneHourInSeconds: TimeInterval = 3600
+            
+            if timeSinceLastActivity > oneHourInSeconds {
+                // Reset to quick add mode if inactive for more than 1 hour
+                NotificationCenter.default.post(name: .triggerQuickAdd, object: nil)
+            }
+            
             // Bring to front and focus
             NSApp.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
             window.orderFrontRegardless()
         }
         
+        // Update last activity time
+        updateLastActivity()
         updateMenuItemTitle()
     }
     
@@ -140,6 +166,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Post notification to trigger quick add mode in the UI
         NotificationCenter.default.post(name: .triggerQuickAdd, object: nil)
         
+        // Update last activity time
+        updateLastActivity()
         updateMenuItemTitle()
     }
     
@@ -174,15 +202,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         toggleItem.title = isVisible ? "Hide PromptEx" : "Show PromptEx"
     }
     
+    private func updateLastActivity() {
+        lastActivityTime = Date()
+    }
+    
+    // Method to check if auto-reset should trigger (for debugging)
+    private func shouldAutoResetToQuickAdd() -> Bool {
+        let timeSinceLastActivity = Date().timeIntervalSince(lastActivityTime)
+        let oneHourInSeconds: TimeInterval = 3600
+        return timeSinceLastActivity > oneHourInSeconds
+    }
+    
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // Don't quit when window is closed, keep running in menu bar
         return false
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        // Clean up notification observers
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
 // Window delegate to update menu items
 extension AppDelegate: NSWindowDelegate {
     func windowDidBecomeKey(_ notification: Notification) {
+        updateLastActivity()
         updateMenuItemTitle()
     }
     
@@ -203,4 +248,5 @@ extension KeyboardShortcuts.Name {
 // Notification extension for quick add trigger
 extension Notification.Name {
     static let triggerQuickAdd = Notification.Name("triggerQuickAdd")
+    static let userActivity = Notification.Name("userActivity")
 } 

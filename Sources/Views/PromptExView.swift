@@ -111,11 +111,27 @@ struct PromptExView: View {
                 Divider()
                 
                 // Prompt list
-                List(promptManager.filteredPrompts, id: \.id, selection: $selectedPrompt) { prompt in
-                    PromptListItem(prompt: prompt, promptManager: promptManager)
-                        .tag(prompt)
+                ScrollViewReader { proxy in
+                    List(promptManager.filteredPrompts, id: \.id, selection: $selectedPrompt) { prompt in
+                        PromptListItem(prompt: prompt, promptManager: promptManager)
+                            .tag(prompt)
+                    }
+                    .listStyle(.sidebar)
+                    .onChange(of: selectedPrompt) { newPrompt in
+                        if let prompt = newPrompt {
+                            // Notify of user activity when selecting a prompt
+                            NotificationCenter.default.post(name: .userActivity, object: nil)
+                            
+                            // Small delay to ensure the prompt is in the filtered list
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                // Scroll to the selected prompt with animation
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo(prompt.id, anchor: .top)
+                                }
+                            }
+                        }
+                    }
                 }
-                .listStyle(.sidebar)
             }
             .frame(width: sidebarWidth)
             
