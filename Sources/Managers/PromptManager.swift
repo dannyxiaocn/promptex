@@ -167,23 +167,30 @@ class PromptManager: ObservableObject {
     
     private func savePromptAsMarkdown(_ prompt: Prompt) {
         let filename = sanitizeFilename("\(prompt.title)_\(prompt.id.uuidString.prefix(8)).md")
-        let markdownContent = generateMarkdownContent(for: prompt)
+        let fullMarkdown = generateMarkdownContent(for: prompt)
+        let simpleMarkdown = generateSimpleMarkdown(for: prompt)
         
         // Save to primary prompts directory
         let primaryURL = promptsDirectory.appendingPathComponent(filename)
         // Save to resources directory for human inspection
         let resourcesURL = resourcesDirectory.appendingPathComponent(filename)
         
-        for destination in [primaryURL, resourcesURL] {
-            do {
-                try markdownContent.write(to: destination, atomically: true, encoding: .utf8)
-            } catch {
-                print("Failed to save prompt as markdown to \(destination): \(error)")
-            }
+        // Write full content to primary directory
+        do {
+            try fullMarkdown.write(to: primaryURL, atomically: true, encoding: .utf8)
+        } catch {
+            print("Failed to save prompt as markdown to \(primaryURL): \(error)")
+        }
+        // Write simplified content to resources directory
+        do {
+            try simpleMarkdown.write(to: resourcesURL, atomically: true, encoding: .utf8)
+        } catch {
+            print("Failed to save simplified prompt to \(resourcesURL): \(error)")
         }
     }
     
     private func generateMarkdownContent(for prompt: Prompt) -> String {
+        // Full markdown with metadata for app storage
         let formatter = ISO8601DateFormatter()
         
         var markdown = """
@@ -217,6 +224,14 @@ class PromptManager: ObservableObject {
         """
         
         return markdown
+    }
+    
+    private func generateSimpleMarkdown(for prompt: Prompt) -> String {
+        """
+        # \(prompt.title)
+        
+        \(prompt.content)
+        """
     }
     
     private func saveMetadata() {
