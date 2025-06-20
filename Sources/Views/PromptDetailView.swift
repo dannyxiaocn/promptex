@@ -8,6 +8,11 @@ struct PromptDetailView: View {
     
     @State private var contentText: String = ""
     @State private var updateTimer: Timer?
+    // Placeholder handling
+    @State private var placeholderValues: [String: String] = [:]
+    private var placeholderNames: [String] {
+        prompt.content.extractPlaceholders()
+    }
     // Track editing focus to auto-select
     @FocusState private var isEditorFocused: Bool
     
@@ -55,7 +60,8 @@ struct PromptDetailView: View {
                     .buttonStyle(.plain)
                     
                     Button {
-                        copyToClipboard(prompt.content)
+                        let substituted = prompt.content.replacingPlaceholders(with: placeholderValues)
+                        copyToClipboard(substituted)
                     } label: {
                         Image(systemName: "doc.on.clipboard")
                     }
@@ -86,6 +92,23 @@ struct PromptDetailView: View {
             }
             
             Divider()
+            // Placeholder inputs
+            if !placeholderNames.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(placeholderNames, id: \.self) { name in
+                        HStack(spacing: 2) {
+                            Text("\(name):")
+                                .font(.caption)
+                            TextField("", text: Binding(
+                                get: { placeholderValues[name] ?? "" },
+                                set: { placeholderValues[name] = $0 }
+                            ))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 60)
+                        }
+                    }
+                }
+            }
             
             // Content (editable)
             VStack(alignment: .leading, spacing: 12) {
@@ -123,7 +146,8 @@ struct PromptDetailView: View {
                 HStack {
                     Spacer()
                     Button {
-                        copyToClipboard(contentText)
+                        let substituted = contentText.replacingPlaceholders(with: placeholderValues)
+                        copyToClipboard(substituted)
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "doc.on.clipboard")
@@ -162,6 +186,11 @@ struct PromptDetailView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear {
             contentText = prompt.content
+            for name in placeholderNames {
+                if placeholderValues[name] == nil {
+                    placeholderValues[name] = ""
+                }
+            }
         }
         .onChange(of: prompt) { newPrompt in
             contentText = newPrompt.content

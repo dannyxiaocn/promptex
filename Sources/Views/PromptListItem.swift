@@ -1,8 +1,15 @@
 import SwiftUI
+import Foundation
 
 struct PromptListItem: View {
     let prompt: Prompt
     @ObservedObject var promptManager: PromptManager
+    
+    // Placeholder handling
+    @State private var placeholderValues: [String: String] = [:]
+    private var placeholderNames: [String] {
+        prompt.content.extractPlaceholders()
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -16,7 +23,8 @@ struct PromptListItem: View {
                 
                 // Quick copy button
                 Button {
-                    copyToClipboard(prompt.content)
+                    let substituted = prompt.content.replacingPlaceholders(with: placeholderValues)
+                    copyToClipboard(substituted)
                 } label: {
                     Image(systemName: "doc.on.clipboard")
                         .foregroundColor(.accentColor)
@@ -32,6 +40,24 @@ struct PromptListItem: View {
                 }
                 .buttonStyle(.plain)
                 .help("Toggle favorite")
+            }
+            
+            // Placeholder inputs
+            if !placeholderNames.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(placeholderNames, id: \.self) { name in
+                        HStack(spacing: 2) {
+                            Text("\(name):")
+                                .font(.caption)
+                            TextField("", text: Binding(
+                                get: { placeholderValues[name] ?? "" },
+                                set: { placeholderValues[name] = $0 }
+                            ))
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 60)
+                        }
+                    }
+                }
             }
             
             // Content preview
@@ -76,6 +102,13 @@ struct PromptListItem: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
+        .onAppear {
+            for name in placeholderNames {
+                if placeholderValues[name] == nil {
+                    placeholderValues[name] = ""
+                }
+            }
+        }
     }
     
     private func copyToClipboard(_ text: String) {
