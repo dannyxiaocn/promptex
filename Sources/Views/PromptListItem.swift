@@ -60,10 +60,9 @@ struct PromptListItem: View {
                 }
             }
             
-            // Content preview
-            Text(prompt.content)
+            // Content preview with highlighted placeholders
+            Text(prompt.content.attributedHighlightPlaceholders())
                 .font(.caption)
-                .foregroundColor(.secondary)
                 .lineLimit(2)
             
             // Category and date

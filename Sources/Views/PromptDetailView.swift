@@ -110,19 +110,12 @@ struct PromptDetailView: View {
                 }
             }
             
-            // Content (editable)
             VStack(alignment: .leading, spacing: 12) {
-                Text("Content (editable)")
+                Text("Content")
                     .font(.headline)
                 
-                TextEditor(text: $contentText)
-                    .id(prompt.id)
-                    .focused($isEditorFocused)
-                    .font(.body)
+                PlaceholderHighlightTextEditor(text: $contentText)
                     .frame(minHeight: 160)
-                    .padding(8)
-                    .background(Color(.textBackgroundColor))
-                    .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(.separatorColor), lineWidth: 1)
@@ -130,9 +123,6 @@ struct PromptDetailView: View {
                     .onChange(of: contentText) { newValue in
                         // Cancel previous timer
                         updateTimer?.invalidate()
-                        
-                        // Only update if user is actively editing and content changed
-                        guard isEditorFocused else { return }
                         
                         // Debounce updates to avoid too frequent saves
                         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
